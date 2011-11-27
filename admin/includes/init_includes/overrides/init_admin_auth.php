@@ -4,7 +4,7 @@
  *
  * @package InitSystem and AJAX handler
  * @copyright Copyright 2011 Kuroi Web Design and Development
- * @copyright portions Copyright 2003-2010 Zen Cart Development Team
+ * @copyright portions Copyright 2003-2011 Zen Cart Development Team
  * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU Public License v3
  */
 
@@ -12,6 +12,9 @@ if (!defined('IS_ADMIN_FLAG')) die('Illegal Access');
 
 if (basename($PHP_SELF) != FILENAME_AJAX . '.php')
 {
+  define(SUPERUSER_PROFILE, 1);
+
+  // admin folder rename required
   if (!defined('ADMIN_BLOCK_WARNING_OVERRIDE') || ADMIN_BLOCK_WARNING_OVERRIDE == '')
   {
     if (basename($_SERVER['SCRIPT_FILENAME']) != FILENAME_ALERT_PAGE . '.php')
@@ -38,13 +41,24 @@ if (basename($PHP_SELF) != FILENAME_AJAX . '.php')
 
     if (!(basename($PHP_SELF) == FILENAME_LOGIN . ".php"))
     {
+      $page = basename($PHP_SELF, ".php");
       if (!isset($_SESSION['admin_id']))
       {
         if (!(basename($PHP_SELF) == FILENAME_PASSWORD_FORGOTTEN . '.php'))
         {
-          zen_redirect(zen_href_link(FILENAME_LOGIN, '', 'SSL'));
+          zen_redirect(zen_href_link(FILENAME_LOGIN, 'camefrom=' . basename($PHP_SELF) . '&' .  zen_get_all_get_params(), 'SSL'));
         }
       }
+
+      if (!in_array($page, array(FILENAME_DEFAULT,FILENAME_ADMIN_ACCOUNT,FILENAME_LOGOFF,FILENAME_ALERT_PAGE,FILENAME_PASSWORD_FORGOTTEN,FILENAME_DENIED,FILENAME_ALT_NAV)) &&
+          !zen_is_superuser())
+      {
+        if (check_page($page, $_GET) == FALSE)
+        {
+          zen_redirect(zen_href_link(FILENAME_DENIED, '', 'SSL'));
+        }
+      }
+
     }
 
     if ((basename($PHP_SELF) == FILENAME_LOGIN . '.php') &&
